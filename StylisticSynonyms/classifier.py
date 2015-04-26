@@ -1,6 +1,7 @@
 __author__ = 'Shashank'
 import sys, os
 import numpy as np
+from scipy.sparse import csr_matrix
 import cPickle
 import file_reader as fr
 from sklearn.pipeline import Pipeline
@@ -26,57 +27,44 @@ def load_pickled_classifier(clf_fname):
         with open(clf_fname) as file:
             return cPickle.load(file)
     except IOError:
-        print "Sorry we couldn't find the file?"
-        return None
+            a = fr.setup()
+            b, c, d = classify(a)
+            return a, b, c, d
 
 # idf = uniqueness to classes
 # tf = brute force commonalities (log tf?)
 
 
 def classify(data):
-    # Do I want inverse document frequency? No right? Because the words usage themselves are different
-    count_vect = CountVectorizer()
+    count_vect = CountVectorizer(ngram_range=(1,5))
+    print type(data.train_data)
+    print len(data.train_data)
+
+
     X_train_counts = count_vect.fit_transform(data.train_data)
-    print X_train_counts.shape
-    # print count_vect.vocabulary_
-    print count_vect.vocabulary_.get(u'algorithm')
     tfidf_transformer = TfidfTransformer()
+    # print count_vect.shape
+    print X_train_counts.shape
     x_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
-    print x_train_tfidf
-
-
-    # vectorizer = TfidfVectorizer(ngram_range=(1, 1), stop_words='english')
-    # print "done with vectorizer"
-    # print vectorizer.get_feature_names()
-    # print vectorizer
-    # tfidfmatrix = vectorizer.fit_transform(data.train_data)
-    # print "done with tfidfmatrix"
-    # print tfidfmatrix
-    # classifier = MultinomialNB().fit(tfidfmatrix, data.cats)
-    # print "done with classifier"
-    # return vectorizer, tfidfmatrix, classifier
-    return count_vect, None, None
+    classifier = MultinomialNB().fit(x_train_tfidf, data.cats)
+    print "done with classifier"
+    return count_vect, tfidf_transformer, classifier
 
 # need to train the models on the dev set and identify how correct it is
 
 
-def predict_new(style, classifier, data):
-    prediction = classifier.predict(style)
-    print prediction
-    print classifier.classes_
-    return data.styles[prediction]
-
-
 # transforming the data_set with new data
-def classify_new(style, vectorizer, classifier):
-
-    new_mat = vectorizer.transform(style)
+def classify_new(style, count_vec, transformer, classifier, data):
+    print type(style)
+    new_counts = count_vec.transform(style)
+    new_mat = transformer.transform(new_counts)
     predicted = classifier.predict(new_mat)
-
+    print type(predicted)
+    print predicted
+    print len(predicted)
+    print classifier.classes_
     for val in predicted:
-        print(val)
-
-    return val
+        print data.styles[classifier.classes_[val]]
 
 
 def test(data, vectorizer, classifier):
@@ -88,17 +76,38 @@ def test(data, vectorizer, classifier):
     print np.mean(predicted == data.cats)
 
 
-def get_prob(style, data, classifier, the_class):
-    probabilities = classifier.predict_proba(style)
+def get_prob(style, count_vec, transformer, classifier, data):
+    print type(style)
+    new_counts = count_vec.transform(style)
+    new_mat = transformer.transform(new_counts)
+    probabilities = classifier.predict_proba(new_mat)
     prob = probabilities.tolist()
+    return prob
+
+
+def check_against(style, count_vec, transformer, classifier, data, the_class):
+    prob = get_prob(style, count_vec, transformer, classifier)
     for probability, category in zip(prob, [0, 1, 2, 3]):
         if data.styles[category] == the_class:
             return probability
     return None
 
+
 data_coll = fr.setup()
-vec, tfidf, clf = classify(data_coll)
+count_vec, transformer, clf = classify(data_coll)
+# data_coll, count_vec, transformer, clf = load_pickled_classifier("my_classifier.pkl")
+# save_pickled_classifier("my_classifier.pkl", clf)
 # print "here"
+# style = [data_coll.sources[3].cv_corpus[0]]
+#
+# # for style in data_coll.sources:
+# print "Label is: "+data_coll.sources[3].label
+# print get_prob(style, count_vec, transformer, clf, data_coll)
+# #     print "\n"
+# prediction = classify_new(style, count_vec, transformer, clf, data_coll)
+# prediction = predict_new(data_coll.sources[0].cv_corpus, clf, data_coll)
+
+print get_prob(["Gay people got dem rights too, y'know. Don't be a pushover, honey"], count_vec, transformer, clf, data_coll)
 #
 # save_pickled_classifier("my_classifier.pkl", clf)
 # print "saved"

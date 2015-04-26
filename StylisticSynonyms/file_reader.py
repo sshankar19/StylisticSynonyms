@@ -22,15 +22,42 @@ def put_in_string(path):
     return string
 
 
+def new_arrangement(path):
+    string_list = []
+    for folder, sub_folders, documents in os.walk(path):
+        for each_file in documents:
+            k = open(path+each_file)
+            string = ""
+            for line in k:
+                string += line
+            k.close()
+            string_list.append(string)
+    return string_list
+
+
+def split_string(line):
+    n = len(line)/100
+    return [line[i:i+n] for i in range(0, len(line), n)]
+
+
+# change references to put in string to new_arrangement
 def initialize_data(data_obj, root, folder_list):
     cv_path = root+data_obj.label+"/"+folder_list[0]
     test_path = root+data_obj.label+"/"+folder_list[1]
     training_path = root+data_obj.label+"/"+folder_list[2]
 
-    data_obj.cv_corpus = put_in_string(cv_path)
+    data_obj.cv_corpus = split_string(put_in_string(cv_path)) # put_in_string(cv_path)
     data_obj.test_corpus = put_in_string(test_path)
-    data_obj.train_corpus = put_in_string(training_path)
-
+    data_obj.train_corpus = split_string(put_in_string(training_path)) # put_in_string(training_path)
+#
+# def initialize_data(data_obj, root, folder_list):
+#     cv_path = root+data_obj.label+"/"+folder_list[0]
+#     test_path = root+data_obj.label+"/"+folder_list[1]
+#     training_path = root+data_obj.label+"/"+folder_list[2]
+#
+#     data_obj.cv_corpus = new_arrangement(cv_path)
+#     data_obj.test_corpus = new_arrangement(test_path)
+#     data_obj.train_corpus = new_arrangement(training_path)
 
 # need to fix this, need to make data.corpuses and data.test set
 def setup():
@@ -59,7 +86,16 @@ def setup():
         initialize_data(new_data, data.root, folders)
         data.sources.append(new_data)
         data.cats.append(new_data.style_code)
-        # print new_data.style_code
+        print new_data.style_code
+
+    # data.train_data = []
+    # for data_source in data.sources:
+    #     for corpus in data_source.train_corpus:
+    #         # print corpus
+    #         data.train_data.append(corpus)
+    #         data.cats.append(data_source.style_code)
+    # return data
+
 
     data.train_data = []
     for data_source in data.sources:
@@ -68,18 +104,34 @@ def setup():
     return data
 
 
-def check_setup():
+def new_check_setup():
     data = setup()
     for obj in data.sources:
         print "data label is: "+obj.label
         print "data style is: "+obj.style
-        train_corpus = obj.train_corpus
-        cv_corpus = obj.cv_corpus
-        test_corpus = obj.test_corpus
-        print "length of training corpus is: " + str(len(train_corpus))
-        print "length of cv corpus is: " + str(len(cv_corpus))
-        print "length of test corpus is: " + str(len(test_corpus))
+        # train_corpus = obj.train_corpus
+        # cv_corpus = obj.cv_corpus
+        # test_corpus = obj.test_corpus
+        # print "length of training corpus is: " + str(len(train_corpus))
+        # print "length of cv corpus is: " + str(len(cv_corpus))
+        # print "length of test corpus is: " + str(len(test_corpus))
         # print "First 100 characters of training are: "+train_corpus[:100]
-        print "\n"
+        # print "\n"
+
+
+#
+# def check_setup():
+#     data = setup()
+#     for obj in data.sources:
+#         print "data label is: "+obj.label
+#         print "data style is: "+obj.style
+#         train_corpus = obj.train_corpus
+#         cv_corpus = obj.cv_corpus
+#         test_corpus = obj.test_corpus
+#         print "length of training corpus is: " + str(len(train_corpus))
+#         print "length of cv corpus is: " + str(len(cv_corpus))
+#         print "length of test corpus is: " + str(len(test_corpus))
+#         # print "First 100 characters of training are: "+train_corpus[:100]
+#         print "\n"
 
 # check_setup()

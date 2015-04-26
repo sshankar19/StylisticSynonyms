@@ -117,6 +117,7 @@ def trim_supreme_court():
     new_file.write(trimmed.encode('utf-8'))
 
 
+
 # createdir("data/split")
 # multiple_file_splitting('brown_govt')
 # multiple_file_splitting('enron')
