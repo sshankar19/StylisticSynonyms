@@ -34,13 +34,10 @@ def load_pickled_classifier(clf_fname):
 # idf = uniqueness to classes
 # tf = brute force commonalities (log tf?)
 
-
 def classify(data):
-    count_vect = CountVectorizer(ngram_range=(1,5))
-    print type(data.train_data)
-    print len(data.train_data)
-
-
+    count_vect = CountVectorizer(ngram_range=(1,1))
+    # print type(data.train_data)
+    # print len(data.train_data)
     X_train_counts = count_vect.fit_transform(data.train_data)
     tfidf_transformer = TfidfTransformer()
     # print count_vect.shape
@@ -63,21 +60,13 @@ def classify_new(style, count_vec, transformer, classifier, data):
     print predicted
     print len(predicted)
     print classifier.classes_
-    for val in predicted:
-        print data.styles[classifier.classes_[val]]
-
-
-def test(data, vectorizer, classifier):
-    test_docs = data.corpuses
-    new_mat = vectorizer.transform(test_docs)
-
-    predicted = classifier.predict(new_mat)
-
-    print np.mean(predicted == data.cats)
+    return predicted
+    # for val in predicted:
+    #     print data.styles[classifier.classes_[val]]
 
 
 def get_prob(style, count_vec, transformer, classifier, data):
-    print type(style)
+    # print type(style)
     new_counts = count_vec.transform(style)
     new_mat = transformer.transform(new_counts)
     probabilities = classifier.predict_proba(new_mat)
@@ -86,15 +75,33 @@ def get_prob(style, count_vec, transformer, classifier, data):
 
 
 def check_against(style, count_vec, transformer, classifier, data, the_class):
-    prob = get_prob(style, count_vec, transformer, classifier)
+    p = get_prob(style, count_vec, transformer, classifier, data)
+    prob = p[0]
     for probability, category in zip(prob, [0, 1, 2, 3]):
+        # print data.styles[category]
+        # print the_class
         if data.styles[category] == the_class:
             return probability
     return None
 
+def cv_test(count_vec, transformer, classifier, data):
+    styles = []
+    cv_corpusi = []
+    i = 0
+    for data_obj in data.sources:
+        for cv_doc in data_obj.cv_corpus:
+            styles.append(data_obj.style_code)
+            cv_corpusi.append(cv_doc)
+            i = i+1
+    print "count is: "+str(i)
+    predictions = classify_new(cv_corpusi, count_vec, transformer, classifier, data)
+    print np.mean(predictions == styles)
+
 
 data_coll = fr.setup()
 count_vec, transformer, clf = classify(data_coll)
+
+cv_test(count_vec, transformer, clf, data_coll)
 # data_coll, count_vec, transformer, clf = load_pickled_classifier("my_classifier.pkl")
 # save_pickled_classifier("my_classifier.pkl", clf)
 # print "here"
@@ -107,7 +114,7 @@ count_vec, transformer, clf = classify(data_coll)
 # prediction = classify_new(style, count_vec, transformer, clf, data_coll)
 # prediction = predict_new(data_coll.sources[0].cv_corpus, clf, data_coll)
 
-print get_prob(["Gay people got dem rights too, y'know. Don't be a pushover, honey"], count_vec, transformer, clf, data_coll)
+# print check_against(["Gay people got dem rights too, y'know. Don't be a pushover, honey"], count_vec, transformer, clf, data_coll, "informal")
 #
 # save_pickled_classifier("my_classifier.pkl", clf)
 # print "saved"
