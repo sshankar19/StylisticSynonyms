@@ -1,6 +1,6 @@
 __author__ = 'Shashank'
 
-import sys, os
+import os
 
 
 class data_sets(object):
@@ -46,9 +46,9 @@ def initialize_data(data_obj, root, folder_list):
     test_path = root+data_obj.label+"/"+folder_list[1]
     training_path = root+data_obj.label+"/"+folder_list[2]
 
-    data_obj.cv_corpus = split_string(put_in_string(cv_path)) # put_in_string(cv_path)
-    data_obj.test_corpus = put_in_string(test_path)
-    data_obj.train_corpus = split_string(put_in_string(training_path)) # put_in_string(training_path)
+    data_obj.cv_corpus = split_string(put_in_string(cv_path))  # put_in_string(cv_path)
+    data_obj.test_corpus = split_string(put_in_string(test_path)) # put_in_string(test_path)
+    data_obj.train_corpus = put_in_string(training_path)
 #
 # def initialize_data(data_obj, root, folder_list):
 #     cv_path = root+data_obj.label+"/"+folder_list[0]
@@ -60,6 +60,8 @@ def initialize_data(data_obj, root, folder_list):
 #     data_obj.train_corpus = new_arrangement(training_path)
 
 # need to fix this, need to make data.corpuses and data.test set
+
+
 def setup():
     data = data_collection()
     data.root = "data_partitioned/"
@@ -96,7 +98,6 @@ def setup():
     #         data.cats.append(data_source.style_code)
     # return data
 
-
     data.train_data = []
     for data_source in data.sources:
         data.train_data.append(data_source.train_corpus)
@@ -104,23 +105,7 @@ def setup():
     return data
 
 
-def new_check_setup():
-    data = setup()
-    for obj in data.sources:
-        print "data label is: "+obj.label
-        print "data style is: "+obj.style
-        # train_corpus = obj.train_corpus
-        # cv_corpus = obj.cv_corpus
-        # test_corpus = obj.test_corpus
-        # print "length of training corpus is: " + str(len(train_corpus))
-        # print "length of cv corpus is: " + str(len(cv_corpus))
-        # print "length of test corpus is: " + str(len(test_corpus))
-        # print "First 100 characters of training are: "+train_corpus[:100]
-        # print "\n"
-
-
-#
-# def check_setup():
+# def new_check_setup():
 #     data = setup()
 #     for obj in data.sources:
 #         print "data label is: "+obj.label
@@ -131,7 +116,22 @@ def new_check_setup():
 #         print "length of training corpus is: " + str(len(train_corpus))
 #         print "length of cv corpus is: " + str(len(cv_corpus))
 #         print "length of test corpus is: " + str(len(test_corpus))
-#         # print "First 100 characters of training are: "+train_corpus[:100]
+#         print "First 100 characters of training are: "+train_corpus[:100]
 #         print "\n"
+
+
+def check_setup():
+    data = setup()
+    for obj in data.sources:
+        print "data label is: "+obj.label
+        print "data style is: "+obj.style
+        train_corpus = obj.train_corpus
+        cv_corpus = obj.cv_corpus
+        test_corpus = obj.test_corpus
+        print "length of training corpus is: " + str(len(train_corpus))
+        print "length of cv corpus is: " + str(len(cv_corpus))
+        print "length of test corpus is: " + str(len(test_corpus))
+        # print "First 100 characters of training are: "+train_corpus[:100]
+        print "\n"
 
 # check_setup()
