@@ -7,8 +7,9 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 
+from alt_features import SentenceVariabilityVectorizer
 import file_reader as fr
-
+from alt_features import stemmer_vectorizer
 
 def save_pickled_classifier(clf_fname, clf):
     try:
@@ -25,21 +26,35 @@ def load_pickled_classifier(clf_fname):
         with open(clf_fname) as file:
             return cPickle.load(file)
     except IOError:
-            a = fr.setup()
-            b, c, d = classify(a)
-            return a, b, c, d
+            return None
+
+def load_pickled_basic_classifier(clf_fname):
+    try:
+        with open(clf_fname) as file:
+            return cPickle.load(file), fr.setup()
+    except IOError:
+        data_coll = fr.setup()
+        basic_classifier = Pipeline([('count_vec', CountVectorizer(ngram_range=(2,2))), ('tf_idf', TfidfTransformer()), ('multi_NB', MultinomialNB())])
+        basic = classify_pipe(basic_classifier, data_coll)
+        return basic, data_coll
 
 # idf = uniqueness to classes
 # tf = brute force commonalities (log tf?)
 
 def classify(data):
-    count_vect = CountVectorizer(ngram_range=(1,1))
-    X_train_counts = count_vect.fit_transform(data.train_data)
-    tfidf_transformer = TfidfTransformer()
+    # count_vect = CountVectorizer(ngram_range=(2,2))
+    # X_train_counts = count_vect.fit_transform(data.train_data)
+    # tfidf_transformer = TfidfTransformer()
     # print count_vect.shape
-    print X_train_counts.shape
-    x_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
-    classifier = MultinomialNB().fit(x_train_tfidf, data.cats)
+    # print X_train_counts.shape
+    # x_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
+
+    vectorizer = SentenceVariabilityVectorizer()
+    t = vectorizer.transform(data.train_data)
+    print "here"
+    print t
+    print t.shape
+    classifier = MultinomialNB().fit(t, data.cats)
     print "done with classifier"
     return count_vect, tfidf_transformer, classifier
 
@@ -127,11 +142,27 @@ def cv_test_pipe(pipe, data):
     print np.mean(predictions == styles)
 
 
-data_coll = fr.setup()
-basic_classifier = Pipeline([('count_vec', CountVectorizer()), ('tf_idf', TfidfTransformer()), ('multi_NB', MultinomialNB())])
-classify_pipe(basic_classifier, data_coll)
-cv_test_pipe(basic_classifier, data_coll)
+def test_feature(vectorizer, feature):
+    data_coll = fr.setup()
+    # classify(data_coll)
+    basic_classifier = Pipeline([(feature, vectorizer), ('multi_NB', MultinomialNB())])
+    classify_pipe(basic_classifier, data_coll)
+    print "----TESTING " + feature+"----"
+    cv_test_pipe(basic_classifier, data_coll)
 
+# basic, data_coll = load_pickled_basic_classifier("basic_clf")
+# data_coll = fr.setup()
+# basic_classifier = Pipeline([('count_vec', CountVectorizer()), ('tf_idf', TfidfTransformer()), ('multi_NB', MultinomialNB())])
+# classify_pipe(basic, data_coll)
+# cv_test_pipe(basic, data_coll)
+
+# save_pickled_classifier("basic.clf", basic)
+
+# test_feature(SentenceVariabilityVectorizer(), "Sentence Variability")
+# test_feature(SentenceLengthVectorizer(), "Sentence Length")
+# test_feature(WordLengthVectorizer(), "Word Length")
+
+test_feature(stemmer_vectorizer(0), "Stemmer Vectorizer")
 # count_vec, transformer, clf = classify(data_coll)
 
 # cv_test(count_vec, transformer, clf, data_coll)

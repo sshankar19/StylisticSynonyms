@@ -88,7 +88,7 @@ def setup():
         initialize_data(new_data, data.root, folders)
         data.sources.append(new_data)
         data.cats.append(new_data.style_code)
-        print new_data.style_code
+        # print new_data.style_code
 
     # data.train_data = []
     # for data_source in data.sources:
