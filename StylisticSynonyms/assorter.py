@@ -1,7 +1,8 @@
 __author__ = 'Shashank'
-import os, sys
+import os
 from random import shuffle
 import shutil
+
 from extractor import createdir
 
 
@@ -132,3 +133,4 @@ def trim_supreme_court():
 # single_splitting_mk2("webtext/", "wine.txt")
 
 
+# multiple_file_splitting('old_byu_text')

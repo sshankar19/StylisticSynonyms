@@ -11,6 +11,14 @@ class data_collection(object):
     pass
 
 
+# def convert_to_pos(the_string):
+#     text = word_tokenize(the_string)
+#     tuple_list = pos_tag(text)
+#     my_list = [x[1] for x in tuple_list]
+#     new_string = " ".join(str(x) for x in my_list)
+#     return new_string
+
+
 def put_in_string(path):
     string = ""
     for folder, sub_folders, documents in os.walk(path):
@@ -46,9 +54,19 @@ def initialize_data(data_obj, root, folder_list):
     test_path = root+data_obj.label+"/"+folder_list[1]
     training_path = root+data_obj.label+"/"+folder_list[2]
 
-    data_obj.cv_corpus = split_string(put_in_string(cv_path))  # put_in_string(cv_path)
-    data_obj.test_corpus = split_string(put_in_string(test_path)) # put_in_string(test_path)
-    data_obj.train_corpus = put_in_string(training_path)
+    list_cvs = split_string(put_in_string(cv_path))
+    list_tests = split_string(put_in_string(test_path))
+    train_corp = put_in_string(training_path)
+    data_obj.cv_corpus = list_cvs  # put_in_string(cv_path)
+    data_obj.test_corpus = list_tests  # put_in_string(test_path)
+    data_obj.train_corpus = train_corp
+
+    # # new features, part of string tagging
+    # data_obj.train_pos = convert_to_pos(train_corp)
+    # data_obj.cv_pos = [convert_to_pos(x) for x in list_cvs]
+    # data_obj.test_pos = [convert_to_pos(x) for x in list_tests]
+
+
 #
 # def initialize_data(data_obj, root, folder_list):
 #     cv_path = root+data_obj.label+"/"+folder_list[0]
@@ -68,7 +86,7 @@ def setup():
     data.styles = {0: 'formal', 1: 'informal', 2: 'legal', 3: 'old'}
 
     # categories for each set of data
-    data.categories = {"enron": 0, "inaugural": 0, "nps": 1, "webtext": 1, "brown_govt": 2, "supreme_corpus": 2, "gutenberg": 3}
+    data.categories = {"enron": 0, "inaugural": 0, "nps": 1, "webtext": 1, "brown_govt": 2, "supreme_corpus": 2, "gutenberg": 3, "old_byu_text": 3}
     data.cats = []
 
     data.sources = []

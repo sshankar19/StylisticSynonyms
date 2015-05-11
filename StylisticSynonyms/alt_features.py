@@ -1,12 +1,26 @@
 __author__ = 'Shashank'
 
-from sklearn.base import BaseEstimator
-from nltk import word_tokenize
-from nltk import sent_tokenize
+from nltk import sent_tokenize, pos_tag, word_tokenize
 import numpy as np
+from scipy import sparse
 from nltk.stem.porter import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
 import nltk
+from sklearn.base import BaseEstimator, ClassifierMixin
+
+# class EnsembleClassifier(BaseEstimator, ClassifierMixin):
+#     def __init__(self, classifiers=None):
+#         self.classifiers = classifiers
+#
+#     def fit(self, X, y):
+#         for classifier in self.classifiers:
+#             classifier.fit(X, y)
+#
+#     def predict_proba(self, X):
+#         self.predictions_ = list()
+#         for classifier in self.classifiers:
+#             self.predictions_.append(classifier.predict_proba(X))
+#         return np.mean(self.predictions_, axis=0)
 
 
 def extend(a_list, num_to_extend):
@@ -108,6 +122,7 @@ class SentenceLengthVectorizer(BaseEstimator):
         # print results
         return results
 
+
 class WordLengthVectorizer(BaseEstimator):
 
     def fit(self, documents, y=None):
@@ -115,33 +130,44 @@ class WordLengthVectorizer(BaseEstimator):
 
     # documents is a list of strings
     def transform(self, documents):
+        # print documents
         average_len = []
         for doc in documents:
             doc = unicode(doc, 'utf-8')
             word_list = word_tokenize(doc)
             number_of_word = len(word_list)
+            # print "\n"
+            # print "Doc is: " + doc
+            # print word_list[:20]
+            # print "\n"
             average = 0.0
             for word in word_list:
                 temp_length = len(word)
                 average += temp_length
 
+            # print "sum is "+ str(average)
             average /= float(number_of_word)
-
+            # print "number of words is: " + str(number_of_word)
+            # print "average is " + str(average)
             average_len.append([average])
 
         results = np.array(average_len)
-        return results
 
-# Based off of http://www.cs.duke.edu/courses/spring14/compsci290/assignments/lab02.html
+        b = sparse.csr_matrix(results)
+        # print results
+        # print b
+        return b
+
+# Stemmer is from http://www.cs.duke.edu/courses/spring14/compsci290/assignments/lab02.html
 
 stemmer = PorterStemmer()
 
 
 def stem_tokens(tokens, stemmer):
-    stemmed = []
+    stems = []
     for item in tokens:
-        stemmed.append(stemmer.stem(item))
-    return stemmed
+        stems.append(stemmer.stem(item))
+    return stems
 
 
 def tokenize(text):
@@ -155,3 +181,68 @@ def stemmer_vectorizer(stop_words):
         return TfidfVectorizer(tokenizer=tokenize)
     else:
         return TfidfVectorizer(tokenizer=tokenize, stop_words='english')
+
+
+# part of speech tagger
+# tfidf vectorizer (tri gram) trained on the part of speech
+def convert_to_pos(the_string):
+    text = word_tokenize(the_string)
+    tuple_list = pos_tag(text)
+    my_list = [x[1] for x in tuple_list]
+    new_string = " ".join(str(x) for x in my_list)
+    return new_string
+
+
+def pos_vectorizer():
+    return TfidfVectorizer(tokenizer=convert_to_pos, ngram_range=(3, 3))
+
+
+def find_min(number, dictionary):
+    return min(dictionary.items(), key=lambda x: abs(x[1]-number))
+
+# noinspection PyAttributeOutsideInit
+class MyClassifier(BaseEstimator, ClassifierMixin):
+    def __init__(self):
+        pass
+
+    def fit(self, X, y):
+        self.classes_ = np.unique([0, 1, 2, 3])
+        new_list = X.tolist()
+        self.styles = [1, 2, 2, 3, 3, 0, 1, 0]
+        self.data = [item[0] for item in new_list]
+        dictionary = {}
+        self.averages = []
+        for style, item in zip(self.styles, self.data):
+            dictionary[style] = dictionary.get(style, 0) + item
+        for key in dictionary:
+            dictionary[key] /= 2.0
+            self.averages.append(dictionary[key])
+        self.dictionary = dictionary
+        return self
+
+    def predict(self, X):
+        new_list = X.tolist()
+        mins = []
+        for stupid in new_list:
+            item = stupid[0]
+            minum = find_min(item, self.dictionary)
+            mins.append(minum[0])
+        mins2 = np.array(mins)
+        return mins2
+
+
+def classify(data):
+    vectorizer = SentenceLengthVectorizer()
+    t = vectorizer.transform(data.train_data)
+    classifier = MyClassifier()
+    classifier = classifier.fit(t, data.cats)
+    print type(classifier.classes_)
+    print classifier.classes_
+    new_x = vectorizer.transform([data.sources[0].cv_corpus[0]])
+    print classifier.predict(new_x)
+    print "done with classifier"
+
+# data = fr.setup()
+# classify(data)
+# basic_classifier = Pipeline([( "Stemmer Vectorizer", SentenceLengthVectorizer()), ('multi_NB', MultinomialNB())])
+# basic = classify_pipe(basic_classifier, data)
